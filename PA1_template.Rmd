@@ -2,24 +2,110 @@
 title: "Reproducible Research: Peer Assessment 1"
 output: 
   html_document:
-    keep_md: true
+    keep_md: yes
 ---
 
 
 ## Loading and preprocessing the data
-
-
-
+   set up working directory
+   unzip activity file and read it to R
+   ```{r}
+   unzip("./activity.zip")
+   data <- read.csv("./activity.csv")
+   str(data)
+   head(data)
+   ```
 ## What is mean total number of steps taken per day?
-
-
-
+   Convert date to POSIXct class 
+   ```{r}
+   library(lubridate)
+   data$date <- ymd(data$date)
+   str(data)
+   ```
+   
+   Tatal steps daily 
+   ```{r}
+   datatotal <- aggregate(steps ~ date, data, sum)
+   str(datatotal)
+   ```
+   
+   Calculate and report the mean and median
+   ```{r}
+   meansteps <- mean(datatotal$steps)
+   meansteps
+   median(datatotal$steps)
+   ```
+   
+   Make a histogram of daily steps 
+   ```{r}
+   hist(datatotal$steps, breaks = 20, xlab = "Daily Steps", ylab = "Frequency",    main = "Total Steps by Date")
+   ```
+   
 ## What is the average daily activity pattern?
-
-
-
+   average steps in 5 intervail for all days
+   ```{r}
+   averagesteps <- aggregate(steps ~ interval, data, mean)
+   str(averagesteps)
+   plot(steps ~ interval, data = averagesteps, type = "l", xlab = "5 min     
+   Interval", ylab = "Mean Daily Steps", main = "Mean Daily Steps by 
+   Intervals")
+   print
+   ```
+   
+   Find max number of average steps across all days
+   ```{r}
+   maxsteps <- averagesteps[which.max(averagesteps$steps),1]
+   maxsteps
+   ```
+   
 ## Imputing missing values
-
-
-
+   Count missing values (how many rows with NA)
+   ```{r}
+   sum(is.na(data$steps))
+   ```
+   
+   replace missing values with mean 
+   
+   ```{r}
+   library(Hmisc)
+   newdata <- data
+   newdata$steps <- with(newdata, impute(steps, mean))
+   str(newdata)
+   ```
+   Tatal steps daily with new data
+   ```{r}
+   newdatatotal <- aggregate(steps ~ date, newdata, sum)
+   str(newdatatotal)
+   ```
+   
+   Ploting with new data
+   ```{r}
+   hist(newdatatotal$steps, breaks = 20,  xlab = "Daily Imputed Steps", ylab =  
+   "Frequency", main = "Total Imputed Steps by Date")
+   ```
+   
+   Calculate mean and median with new data
+   ```{r}
+   mean(newdatatotal$steps)
+   median(newdatatotal$steps)
+   ```
+   
+   Analysis: The mean and median calculated from the imputed data were almost the same as the  mean and median from              origianl data.  
+   
+   
 ## Are there differences in activity patterns between weekdays and weekends?
+   Assign weekday and weekend for imputed data
+   ```{r}
+   newdatawk <- newdata
+   newdatawk$typeday <- as.factor(ifelse(weekdays(newdatawk$date) %in% c("Saturday", "Sunday"), "weekend", "weekday"))
+   str(newdatawk)
+   ```
+   plotting
+   Calculate daily steps 
+   ```{r}
+   meandailysteps <- aggregate(steps ~ interval + typeday, newdatawk, mean)
+   library(lattice)
+   xyplot(steps ~ interval | factor(typeday), data = meandailysteps, aspect = 0.8, type = "l")
+   ```
+   
+
